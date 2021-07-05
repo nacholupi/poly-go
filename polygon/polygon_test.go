@@ -7,6 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const gradeToKM = 111.3195 // 1 grade == 111.3195km
+
 func Test_FromRadius_Validations(t *testing.T) {
 
 	type test struct {
@@ -79,8 +81,6 @@ func Test_FromRadius_Validations(t *testing.T) {
 }
 
 func Test_FromRadius_Results(t *testing.T) {
-
-	const gradeToKM = 111.3195 // 1 grade == 111.3195km
 
 	type test struct {
 		name            string
