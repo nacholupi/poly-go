@@ -10,75 +10,83 @@ import (
 
 func Test_FromRadiusIO_ReturnsPolygon(t *testing.T) {
 
+	type expResp struct {
+		id          string
+		coordinates int
+		err         error
+	}
+
 	type tCase struct {
 		name         string
-		req          []RadiusReq
-		expectedResp []PolygonResp
+		req          []Request
+		expectedResp []expResp
 	}
 
 	var testCases = []tCase{
 		{
 			name:         "Empty Request",
-			req:          []RadiusReq{},
-			expectedResp: []PolygonResp{},
+			req:          []Request{},
+			expectedResp: []expResp{},
 		}, {
 			name: "One Polygon",
-			req: []RadiusReq{
+			req: []Request{
 				{ID: "TEST",
 					Coordinates: Coordinates{Long: float64(0), Lat: float64(0)},
 					Radius:      float64(gradeToKM),
 					Edges:       4,
 				},
 			},
-			expectedResp: []PolygonResp{
+			expectedResp: []expResp{
 				{
-					ID:      "TEST",
-					Polygon: []Coordinates{{0, 1}, {1, 0}, {0, -1}, {-1, 0}},
+					id:          "TEST",
+					coordinates: 4,
 				},
 			},
 		}, {
 			name: "Wrong Long",
-			req: []RadiusReq{
+			req: []Request{
 				{ID: "TEST",
 					Coordinates: Coordinates{Long: float64(999), Lat: float64(0)},
 					Radius:      float64(gradeToKM),
 					Edges:       4,
 				},
 			},
-			expectedResp: []PolygonResp{
+			expectedResp: []expResp{
 				{
-					ID:      "TEST",
-					Polygon: []Coordinates{},
-					Error:   fmt.Errorf("Longitude must be greater than -180 and less than 180"),
+					id:          "TEST",
+					coordinates: 0,
+					err:         fmt.Errorf("Longitude must be greater than -180 and less than 180"),
 				},
 			},
 		}, {
 			name: "Three Polygons",
-			req: []RadiusReq{
+			req: []Request{
 				{ID: "TEST_1",
 					Coordinates: Coordinates{Long: float64(0), Lat: float64(0)},
 					Radius:      float64(gradeToKM),
 					Edges:       4,
 				}, {ID: "TEST_2",
-					Coordinates: Coordinates{Long: float64(0), Lat: float64(0)},
+					Coordinates: Coordinates{Long: float64(1), Lat: float64(1)},
 					Radius:      float64(gradeToKM),
-					Edges:       4,
+					Edges:       5,
 				}, {ID: "TEST_3",
 					Coordinates: Coordinates{Long: float64(0), Lat: float64(0)},
 					Radius:      float64(gradeToKM),
 					Edges:       4,
 				},
 			},
-			expectedResp: []PolygonResp{
+			expectedResp: []expResp{
 				{
-					ID:      "TEST_1",
-					Polygon: []Coordinates{{0, 1}, {1, 0}, {0, -1}, {-1, 0}},
-				}, {
-					ID:      "TEST_2",
-					Polygon: []Coordinates{{0, 1}, {1, 0}, {0, -1}, {-1, 0}},
-				}, {
-					ID:      "TEST_3",
-					Polygon: []Coordinates{{0, 1}, {1, 0}, {0, -1}, {-1, 0}},
+					id:          "TEST_1",
+					coordinates: 4,
+				},
+				{
+					id:          "TEST_2",
+					coordinates: 5,
+				},
+				{
+					id:          "TEST_3",
+					coordinates: 4,
 				},
 			},
 		},
@@ -93,32 +101,32 @@ func Test_FromRadiusIO_ReturnsPolygon(t *testing.T) {
 			assert.Nil(t, err)
 			assert.Len(t, res, len(tc.expectedResp))
 			for i := range res {
-				assert.Equal(t, tc.expectedResp[i].ID, res[i].ID)
-				assertEqualFloatSlice(t, tc.expectedResp[i].Polygon, res[i].Polygon, 6)
-				assert.Equal(t, tc.expectedResp[i].Error, res[i].Error)
+				assert.Equal(t, tc.expectedResp[i].id, res[i].ID)
+				assert.Len(t, res[i].Polygon, tc.expectedResp[i].coordinates)
+				assert.Equal(t, tc.expectedResp[i].err, res[i].Error)
 			}
 		})
 	}
 }
 
-// TODO TESTs Read and Write Error
+// TODO: TESTs Read and Write Error
 
 type ioTest struct {
-	buffInput []RadiusReq
+	buffInput []Request
 	idx       int
-	writes    []PolygonResp
+	writes    []Response
 }
 
-func (iot *ioTest) Read() (RadiusReq, error) {
+func (iot *ioTest) Read() (Request, error) {
 	if len(iot.buffInput) == iot.idx {
-		return RadiusReq{}, io.EOF
+		return Request{}, io.EOF
 	}
 	res := iot.buffInput[iot.idx]
 	iot.idx++
 	return res, nil
 }
 
-func (iot *ioTest) Write(p PolygonResp) error {
+func (iot *ioTest) Write(p Response) error {
 	iot.writes = append(iot.writes, p)
 	return nil
 }

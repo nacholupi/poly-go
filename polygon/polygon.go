@@ -70,32 +70,30 @@ func polygonFromRadius(coord Coordinates, radiusKm float64, edges int) []Coordin
 	return res
 }
 
-// polygon.IORequest -- ReadOutput
-type RadiusReq struct {
+type Request struct {
 	ID          string
 	Coordinates Coordinates
 	Radius      float64
 	Edges       int
 }
 
-// polygon.IOResponse --- WriteInput
-type PolygonResp struct {
+type Response struct {
 	ID      string
 	Polygon []Coordinates
 	Error   error
 }
 
 type Reader interface {
-	Read() (RadiusReq, error)
+	Read() (Request, error)
 }
 
 type Writer interface {
-	Write(PolygonResp) error
+	Write(Response) error
 }
 
-func polygonFromReq(req RadiusReq) PolygonResp {
+func polygonFromReq(req Request) Response {
 	coord, err := FromRadius(req.Coordinates, req.Radius, req.Edges)
-	return PolygonResp{ID: req.ID, Polygon: coord, Error: err}
+	return Response{ID: req.ID, Polygon: coord, Error: err}
 }
 
 func FromRadiusIO(in Reader, out Writer) error {
