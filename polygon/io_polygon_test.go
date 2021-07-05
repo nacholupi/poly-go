@@ -28,26 +28,15 @@ func Test_FromRadiusIO_ReturnsPolygon(t *testing.T) {
 			req:          []Request{},
 			expectedResp: []expResp{},
 		}, {
-			name: "One Polygon",
-			req: []Request{
-				{ID: "TEST",
-					Coordinates: Coordinates{Long: float64(0), Lat: float64(0)},
-					Radius:      float64(gradeToKM),
-					Edges:       4,
-				},
-			},
-			expectedResp: []expResp{
-				{
-					id:          "TEST",
-					coordinates: 4,
-				},
-			},
+			name:         "One Polygon",
+			req:          []Request{nullIslandReq("TEST", 4)},
+			expectedResp: []expResp{{id: "TEST", coordinates: 4}},
 		}, {
 			name: "Wrong Long",
 			req: []Request{
 				{ID: "TEST",
 					Coordinates: Coordinates{Long: float64(999), Lat: float64(0)},
-					Radius:      float64(gradeToKM),
+					Radius:      1,
 					Edges:       4,
 				},
 			},
@@ -61,43 +50,24 @@ func Test_FromRadiusIO_ReturnsPolygon(t *testing.T) {
 		}, {
 			name: "Three Polygons",
 			req: []Request{
-				{ID: "TEST_1",
-					Coordinates: Coordinates{Long: float64(0), Lat: float64(0)},
-					Radius:      float64(gradeToKM),
-					Edges:       4,
-				}, {ID: "TEST_2",
-					Coordinates: Coordinates{Long: float64(1), Lat: float64(1)},
-					Radius:      float64(gradeToKM),
-					Edges:       5,
-				}, {ID: "TEST_3",
-					Coordinates: Coordinates{Long: float64(0), Lat: float64(0)},
-					Radius:      float64(gradeToKM),
-					Edges:       4,
-				},
-			},
+				nullIslandReq("ID_1", 4),
+				nullIslandReq("ID_2", 5),
+				nullIslandReq("ID_3", 10)},
 			expectedResp: []expResp{
-				{
-					id:          "TEST_1",
-					coordinates: 4,
-				},
-				{
-					id:          "TEST_2",
-					coordinates: 5,
-				},
-				{
-					id:          "TEST_3",
-					coordinates: 4,
-				},
-			},
+				{id: "ID_1", coordinates: 4},
+				{id: "ID_2", coordinates: 5},
+				{id: "ID_3", coordinates: 10}},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			io := &ioTest{buffInput: tc.req}
-			err := FromRadiusIO(io, io)
+			r := &ioTestReader{input: tc.req}
+			w := &ioTestWriter{}
 
-			res := io.writes
+			err := FromRadiusIO(r, w)
+
+			res := w.output
 			assert.Nil(t, err)
 			assert.Len(t, res, len(tc.expectedResp))
 			for i := range res {
@@ -109,24 +79,67 @@ func Test_FromRadiusIO_ReturnsPolygon(t *testing.T) {
 	}
 }
 
-// TODO: TESTs Read and Write Error
+func Test_FromRadiusIO_ReaderFails(t *testing.T) {
+	req := []Request{nullIslandReq("ID_1", 5), nullIslandReq("ID_2", 4)}
+	one := 1
+	r := &ioTestReader{input: req, failIdx: &one}
+	w := &ioTestWriter{}
 
-type ioTest struct {
-	buffInput []Request
-	idx       int
-	writes    []Response
+	err := FromRadiusIO(r, w)
+
+	assert.Error(t, err)
+	assert.Len(t, w.output, 1)
 }
 
-func (iot *ioTest) Read() (Request, error) {
-	if len(iot.buffInput) == iot.idx {
+func Test_FromRadiusIO_WriterFails(t *testing.T) {
+	req := []Request{nullIslandReq("ID_1", 5), nullIslandReq("ID_2", 10)}
+	one := 1
+	r := &ioTestReader{input: req}
+	w := &ioTestWriter{failIdx: &one}
+
+	err := FromRadiusIO(r, w)
+
+	assert.Error(t, err)
+	assert.Len(t, w.output, 1)
+}
+
+func nullIslandReq(id string, edges int) Request {
+	return Request{ID: id,
+		Coordinates: Coordinates{Long: float64(0), Lat: float64(0)},
+		Radius:      float64(1),
+		Edges:       edges,
+	}
+}
+
+type ioTestReader struct {
+	input   []Request
+	idx     int
+	failIdx *int
+}
+
+func (r *ioTestReader) Read() (Request, error) {
+	if r.failIdx != nil && r.idx == *r.failIdx {
+		return Request{}, assert.AnError
+	}
+	if len(r.input) == r.idx {
 		return Request{}, io.EOF
 	}
-	res := iot.buffInput[iot.idx]
-	iot.idx++
+	res := r.input[r.idx]
+	r.idx++
 	return res, nil
 }
 
-func (iot *ioTest) Write(p Response) error {
-	iot.writes = append(iot.writes, p)
+type ioTestWriter struct {
+	output  []Response
+	idx     int
+	failIdx *int
+}
+
+func (w *ioTestWriter) Write(p Response) error {
+	if w.failIdx != nil && w.idx == *w.failIdx {
+		return assert.AnError
+	}
+	w.output = append(w.output, p)
+	w.idx++
 	return nil
 }

@@ -99,13 +99,19 @@ func polygonFromReq(req Request) Response {
 func FromRadiusIO(in Reader, out Writer) error {
 	for {
 		req, err := in.Read()
-		if err == io.EOF {
-			break
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return err
 		}
 
 		polResp := polygonFromReq(req)
 
-		_ = out.Write(polResp)
+		err = out.Write(polResp)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
