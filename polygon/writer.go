@@ -1,6 +1,7 @@
 package polygon
 
 import (
+	"bufio"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -10,6 +11,7 @@ import (
 
 type kmlWriter struct {
 	encoder *xml.Encoder
+	dwriter *bufio.Writer
 }
 
 type xmlResp struct {
@@ -22,10 +24,11 @@ type xmlCoord struct {
 	Formatted string   `xml:",innerxml"`
 }
 
-func NewKMLRespWriter(w io.Writer) Writer {
-	enc := xml.NewEncoder(w)
-	enc.Indent("", "    ")
-	return &kmlWriter{encoder: enc}
+func NewKMLRespWriter(w io.Writer) *kmlWriter {
+	e := xml.NewEncoder(w)
+	e.Indent("  ", "  ")
+	dw := bufio.NewWriter(w)
+	return &kmlWriter{encoder: e, dwriter: dw}
 }
 
 func (k *kmlWriter) Write(resp Response) error {
@@ -33,6 +36,28 @@ func (k *kmlWriter) Write(resp Response) error {
 	r := xmlResp{Name: resp.ID, Coordinates: xmlCoord{Formatted: f}}
 	// TODO: TEST err
 	return k.encoder.Encode(r)
+}
+
+const (
+	header = `<?xml version="1.0" encoding="UTF-8"?>` + "\n" +
+		`<kml xmlns="http://www.opengis.net/kml/2.2">` + "\n" +
+		`  <Document>` + "\n"
+	footer = `  </Document>` + "\n" +
+		`</kml>`
+)
+
+func (k *kmlWriter) WriteHeader() error {
+	_, e := k.dwriter.WriteString(header)
+	e = k.dwriter.Flush()
+	// TODO: TEST err
+	return e
+}
+
+func (k *kmlWriter) WriteFooter() error {
+	_, e := k.dwriter.WriteString(footer)
+	e = k.dwriter.Flush()
+	// TODO: TEST err
+	return e
 }
 
 func (k *kmlWriter) format(cs []Coordinates) string {
