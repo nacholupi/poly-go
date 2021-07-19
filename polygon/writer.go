@@ -63,8 +63,8 @@ func (k *kmlWriter) WriteFooter() error {
 func (k *kmlWriter) format(cs []Coordinates) string {
 	var r string
 	for _, c := range cs {
-		r += fmt.Sprintf(" %v,%v", c.Long, c.Lat)
+		r += fmt.Sprintf(" %.8f,%.8f", c.Long, c.Lat)
 	}
-	r += fmt.Sprintf(" %v,%v ", cs[0].Long, cs[0].Lat)
+	r += fmt.Sprintf(" %.8f,%.8f", cs[0].Long, cs[0].Lat)
 	return r
 }

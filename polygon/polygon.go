@@ -80,7 +80,6 @@ type Request struct {
 type Response struct {
 	ID      string
 	Polygon []Coordinates
-	Error   error
 }
 
 type Reader interface {
@@ -91,9 +90,9 @@ type Writer interface {
 	Write(Response) error
 }
 
-func polygonFromReq(req Request) Response {
+func polygonFromReq(req Request) (Response, error) {
 	coord, err := FromRadius(req.Coordinates, req.Radius, req.Edges)
-	return Response{ID: req.ID, Polygon: coord, Error: err}
+	return Response{ID: req.ID, Polygon: coord}, err
 }
 
 func FromRadiusIO(in Reader, out Writer) error {
@@ -106,7 +105,10 @@ func FromRadiusIO(in Reader, out Writer) error {
 			return err
 		}
 
-		polResp := polygonFromReq(req)
+		polResp, err := polygonFromReq(req)
+		if err != nil {
+			return err
+		}
 
 		err = out.Write(polResp)
 		if err != nil {

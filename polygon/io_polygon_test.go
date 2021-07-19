@@ -1,7 +1,6 @@
 package polygon
 
 import (
-	"fmt"
 	"io"
 	"testing"
 
@@ -13,7 +12,6 @@ func Test_FromRadiusIO_ReturnsPolygon(t *testing.T) {
 	type expResp struct {
 		id          string
 		coordinates int
-		err         error
 	}
 
 	type tCase struct {
@@ -31,22 +29,6 @@ func Test_FromRadiusIO_ReturnsPolygon(t *testing.T) {
 			name:         "One Polygon",
 			req:          []Request{nullIslandReq("TEST", 4)},
 			expectedResp: []expResp{{id: "TEST", coordinates: 4}},
-		}, {
-			name: "Wrong Long",
-			req: []Request{
-				{ID: "TEST",
-					Coordinates: Coordinates{Long: float64(999), Lat: float64(0)},
-					Radius:      1,
-					Edges:       4,
-				},
-			},
-			expectedResp: []expResp{
-				{
-					id:          "TEST",
-					coordinates: 0,
-					err:         fmt.Errorf("Longitude must be greater than -180 and less than 180"),
-				},
-			},
 		}, {
 			name: "Three Polygons",
 			req: []Request{
@@ -73,7 +55,6 @@ func Test_FromRadiusIO_ReturnsPolygon(t *testing.T) {
 			for i := range res {
 				assert.Equal(t, tc.expectedResp[i].id, res[i].ID)
 				assert.Len(t, res[i].Polygon, tc.expectedResp[i].coordinates)
-				assert.Equal(t, tc.expectedResp[i].err, res[i].Error)
 			}
 		})
 	}

@@ -15,16 +15,16 @@ func Test_KMLWrite(t *testing.T) {
 	e := sut.Write(resp)
 	str := buf.String()
 
-	expected := `  <Placemark>` + "\n" +
-		`    <name>TEST</name>` + "\n" +
-		`    <Polygon>` + "\n" +
-		`      <outerBoundaryIs>` + "\n" +
-		`        <LinearRing>` + "\n" +
-		`          <coordinates> 23.29090909,-42.2 -10.2,-42.2 23.29090909,-42.2 </coordinates>` + "\n" +
-		`        </LinearRing>` + "\n" +
-		`      </outerBoundaryIs>` + "\n" +
-		`    </Polygon>` + "\n" +
-		`  </Placemark>`
+	expected := "  <Placemark>\n" +
+		"    <name>TEST</name>\n" +
+		"    <Polygon>\n" +
+		"      <outerBoundaryIs>\n" +
+		"        <LinearRing>\n" +
+		"          <coordinates> 23.29090909,-42.20000000 -10.20000000,-42.20000000 23.29090909,-42.20000000</coordinates>\n" +
+		"        </LinearRing>\n" +
+		"      </outerBoundaryIs>\n" +
+		"    </Polygon>\n" +
+		"  </Placemark>"
 	assert.Nil(t, e)
 	assert.Equal(t, expected, str)
 

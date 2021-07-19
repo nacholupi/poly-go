@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"poly-go/polygon"
+	"poly-go/conv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -16,9 +16,8 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: FIRST try
 		fmt.Println("This is a test")
-		r := polygon.NewCSVReqReader(strings.NewReader("ID1, 1.1, 2.2, 1, 4\n ID2, 1.1, 2.2, 111, 50"))
-		w := polygon.NewKMLRespWriter(os.Stdout)
-		err := polygon.FromRadiusIO(r, w)
+		c := conv.NewCsvToKmlConverter(strings.NewReader("ID1, 1.1, 2.2, 1, 4\n ID2, 1.1, 2.2, 111, 50"), os.Stdout)
+		err := c.CircleToPolygon()
 		if err != nil {
 			fmt.Println(err)
 		}
