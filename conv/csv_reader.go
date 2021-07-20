@@ -1,8 +1,9 @@
-package polygon
+package conv
 
 import (
 	"encoding/csv"
 	"io"
+	"poly-go/polygon"
 	"strconv"
 
 	"github.com/pkg/errors"
@@ -20,10 +21,10 @@ func NewCSVReqReader(r io.Reader) *csvReqReader {
 	return &csvReqReader{csvReader: csvr}
 }
 
-func (r *csvReqReader) Read() (Request, error) {
+func (r *csvReqReader) read() (request, error) {
 	rec, err := r.csvReader.Read()
 	if err != nil {
-		return Request{}, err
+		return request{}, err
 	}
 	req, err := r.parseRecord(rec)
 
@@ -34,32 +35,32 @@ func (r *csvReqReader) Read() (Request, error) {
 	return req, err
 }
 
-func (r *csvReqReader) parseRecord(record []string) (Request, error) {
+func (r *csvReqReader) parseRecord(record []string) (request, error) {
 	long, err := strconv.ParseFloat(record[1], 64)
 	if err != nil {
-		return Request{}, err
+		return request{}, err
 	}
 
 	lat, err := strconv.ParseFloat(record[2], 64)
 	if err != nil {
-		return Request{}, err
+		return request{}, err
 	}
 
 	rad, err := strconv.ParseFloat(record[3], 64)
 	if err != nil {
-		return Request{}, err
+		return request{}, err
 	}
 
 	edges, err := strconv.ParseInt(record[4], 10, 32)
 	if err != nil {
-		return Request{}, err
+		return request{}, err
 	}
 
-	req := Request{
-		ID:          record[0],
-		Coordinates: Coordinates{Long: long, Lat: lat},
-		Radius:      rad,
-		Edges:       int(edges),
+	req := request{
+		id:          record[0],
+		coordinates: polygon.Coordinates{Long: long, Lat: lat},
+		radius:      rad,
+		edges:       int(edges),
 	}
 
 	return req, nil

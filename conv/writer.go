@@ -1,13 +1,12 @@
-package polygon
+package conv
 
 import (
 	"bufio"
 	"encoding/xml"
 	"fmt"
 	"io"
+	"poly-go/polygon"
 )
-
-// TODO: GeoJson Writer
 
 type kmlWriter struct {
 	encoder *xml.Encoder
@@ -31,11 +30,20 @@ func NewKMLRespWriter(w io.Writer) *kmlWriter {
 	return &kmlWriter{encoder: e, dwriter: dw}
 }
 
-func (k *kmlWriter) Write(resp Response) error {
-	f := k.format(resp.Polygon)
-	r := xmlResp{Name: resp.ID, Coordinates: xmlCoord{Formatted: f}}
+func (k *kmlWriter) write(resp response) error {
+	f := k.format(resp.polygon)
+	r := xmlResp{Name: resp.id, Coordinates: xmlCoord{Formatted: f}}
 	// TODO: TEST err
 	return k.encoder.Encode(r)
+}
+
+func (k *kmlWriter) format(cs []polygon.Coordinates) string {
+	var r string
+	for _, c := range cs {
+		r += fmt.Sprintf(" %.8f,%.8f", c.Long, c.Lat)
+	}
+	r += fmt.Sprintf(" %.8f,%.8f", cs[0].Long, cs[0].Lat)
+	return r
 }
 
 const (
@@ -46,25 +54,16 @@ const (
 		`</kml>`
 )
 
-func (k *kmlWriter) WriteHeader() error {
+func (k *kmlWriter) writeHeader() error {
 	_, e := k.dwriter.WriteString(header)
 	e = k.dwriter.Flush()
 	// TODO: TEST err
 	return e
 }
 
-func (k *kmlWriter) WriteFooter() error {
+func (k *kmlWriter) writeFooter() error {
 	_, e := k.dwriter.WriteString(footer)
 	e = k.dwriter.Flush()
 	// TODO: TEST err
 	return e
-}
-
-func (k *kmlWriter) format(cs []Coordinates) string {
-	var r string
-	for _, c := range cs {
-		r += fmt.Sprintf(" %.8f,%.8f", c.Long, c.Lat)
-	}
-	r += fmt.Sprintf(" %.8f,%.8f", cs[0].Long, cs[0].Lat)
-	return r
 }

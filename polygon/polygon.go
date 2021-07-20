@@ -2,7 +2,6 @@ package polygon
 
 import (
 	"fmt"
-	"io"
 	"math"
 )
 
@@ -68,52 +67,4 @@ func polygonFromRadius(coord Coordinates, radiusKm float64, edges int) []Coordin
 	}
 
 	return res
-}
-
-type Request struct {
-	ID          string
-	Coordinates Coordinates
-	Radius      float64
-	Edges       int
-}
-
-type Response struct {
-	ID      string
-	Polygon []Coordinates
-}
-
-type Reader interface {
-	Read() (Request, error)
-}
-
-type Writer interface {
-	Write(Response) error
-}
-
-func polygonFromReq(req Request) (Response, error) {
-	coord, err := FromRadius(req.Coordinates, req.Radius, req.Edges)
-	return Response{ID: req.ID, Polygon: coord}, err
-}
-
-func FromRadiusIO(in Reader, out Writer) error {
-	for {
-		req, err := in.Read()
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			return err
-		}
-
-		polResp, err := polygonFromReq(req)
-		if err != nil {
-			return err
-		}
-
-		err = out.Write(polResp)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }

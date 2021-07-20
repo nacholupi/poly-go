@@ -1,7 +1,8 @@
-package polygon
+package conv
 
 import (
 	"io"
+	"poly-go/polygon"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,22 +17,22 @@ func Test_FromRadiusIO_ReturnsPolygon(t *testing.T) {
 
 	type tCase struct {
 		name         string
-		req          []Request
+		req          []request
 		expectedResp []expResp
 	}
 
 	var testCases = []tCase{
 		{
 			name:         "Empty Request",
-			req:          []Request{},
+			req:          []request{},
 			expectedResp: []expResp{},
 		}, {
 			name:         "One Polygon",
-			req:          []Request{nullIslandReq("TEST", 4)},
+			req:          []request{nullIslandReq("TEST", 4)},
 			expectedResp: []expResp{{id: "TEST", coordinates: 4}},
 		}, {
 			name: "Three Polygons",
-			req: []Request{
+			req: []request{
 				nullIslandReq("ID_1", 4),
 				nullIslandReq("ID_2", 5),
 				nullIslandReq("ID_3", 10)},
@@ -53,15 +54,15 @@ func Test_FromRadiusIO_ReturnsPolygon(t *testing.T) {
 			assert.Nil(t, err)
 			assert.Len(t, res, len(tc.expectedResp))
 			for i := range res {
-				assert.Equal(t, tc.expectedResp[i].id, res[i].ID)
-				assert.Len(t, res[i].Polygon, tc.expectedResp[i].coordinates)
+				assert.Equal(t, tc.expectedResp[i].id, res[i].id)
+				assert.Len(t, res[i].polygon, tc.expectedResp[i].coordinates)
 			}
 		})
 	}
 }
 
 func Test_FromRadiusIO_ReaderFails(t *testing.T) {
-	req := []Request{nullIslandReq("ID_1", 5), nullIslandReq("ID_2", 4)}
+	req := []request{nullIslandReq("ID_1", 5), nullIslandReq("ID_2", 4)}
 	one := 1
 	r := &ioTestReader{input: req, failIdx: &one}
 	w := &ioTestWriter{}
@@ -73,7 +74,7 @@ func Test_FromRadiusIO_ReaderFails(t *testing.T) {
 }
 
 func Test_FromRadiusIO_WriterFails(t *testing.T) {
-	req := []Request{nullIslandReq("ID_1", 5), nullIslandReq("ID_2", 10)}
+	req := []request{nullIslandReq("ID_1", 5), nullIslandReq("ID_2", 10)}
 	one := 1
 	r := &ioTestReader{input: req}
 	w := &ioTestWriter{failIdx: &one}
@@ -84,26 +85,27 @@ func Test_FromRadiusIO_WriterFails(t *testing.T) {
 	assert.Len(t, w.output, 1)
 }
 
-func nullIslandReq(id string, edges int) Request {
-	return Request{ID: id,
-		Coordinates: Coordinates{Long: float64(0), Lat: float64(0)},
-		Radius:      float64(1),
-		Edges:       edges,
+func nullIslandReq(id string, edges int) request {
+	return request{
+		id:          id,
+		coordinates: polygon.Coordinates{Long: float64(0), Lat: float64(0)},
+		radius:      float64(1),
+		edges:       edges,
 	}
 }
 
 type ioTestReader struct {
-	input   []Request
+	input   []request
 	idx     int
 	failIdx *int
 }
 
-func (r *ioTestReader) Read() (Request, error) {
+func (r *ioTestReader) read() (request, error) {
 	if r.failIdx != nil && r.idx == *r.failIdx {
-		return Request{}, assert.AnError
+		return request{}, assert.AnError
 	}
 	if len(r.input) == r.idx {
-		return Request{}, io.EOF
+		return request{}, io.EOF
 	}
 	res := r.input[r.idx]
 	r.idx++
@@ -111,12 +113,12 @@ func (r *ioTestReader) Read() (Request, error) {
 }
 
 type ioTestWriter struct {
-	output  []Response
+	output  []response
 	idx     int
 	failIdx *int
 }
 
-func (w *ioTestWriter) Write(p Response) error {
+func (w *ioTestWriter) write(p response) error {
 	if w.failIdx != nil && w.idx == *w.failIdx {
 		return assert.AnError
 	}

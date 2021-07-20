@@ -1,7 +1,8 @@
-package polygon
+package conv
 
 import (
 	"bytes"
+	"poly-go/polygon"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,9 +11,9 @@ import (
 func Test_KMLWrite(t *testing.T) {
 	buf := new(bytes.Buffer)
 	sut := NewKMLRespWriter(buf)
-	resp := Response{ID: "TEST", Polygon: []Coordinates{{Long: 23.290909090, Lat: -42.2}, {Long: -10.2, Lat: -42.2}}}
+	resp := response{id: "TEST", polygon: []polygon.Coordinates{{Long: 23.290909090, Lat: -42.2}, {Long: -10.2, Lat: -42.2}}}
 
-	e := sut.Write(resp)
+	e := sut.write(resp)
 	str := buf.String()
 
 	expected := "  <Placemark>\n" +
@@ -34,7 +35,7 @@ func Test_KMLWriteHeader(t *testing.T) {
 	buf := new(bytes.Buffer)
 	sut := NewKMLRespWriter(buf)
 
-	e := sut.WriteHeader()
+	e := sut.writeHeader()
 
 	str := buf.String()
 	expected := `<?xml version="1.0" encoding="UTF-8"?>` + "\n" +
@@ -50,7 +51,7 @@ func Test_KMLWriteFooter(t *testing.T) {
 	buf := new(bytes.Buffer)
 	sut := NewKMLRespWriter(buf)
 
-	e := sut.WriteFooter()
+	e := sut.writeFooter()
 
 	str := buf.String()
 	expected := `  </Document>` + "\n" +
