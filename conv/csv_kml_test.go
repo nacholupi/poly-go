@@ -78,6 +78,12 @@ func Test_CircleToPolygon_KML_Responses(t *testing.T) {
 	}
 	var tCases = []tCase{
 		{
+			name:     "Empty CSV",
+			csv:      "",
+			expected: "",
+			err:      false,
+		},
+		{
 			name: "CSV with single row - 3 edges",
 			csv:  "ID1,1,-89,2,3",
 			expected: "  <Placemark>\n" +

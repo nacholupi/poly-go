@@ -55,15 +55,17 @@ const (
 )
 
 func (k *kmlWriter) writeHeader() error {
-	_, e := k.dwriter.WriteString(header)
-	e = k.dwriter.Flush()
+	k.dwriter.WriteString(header)
 	// TODO: TEST err
-	return e
+	k.dwriter.Flush()
+	// TODO: TEST err
+	return nil
 }
 
 func (k *kmlWriter) writeFooter() error {
-	_, e := k.dwriter.WriteString(footer)
-	e = k.dwriter.Flush()
+	k.dwriter.WriteString(footer)
 	// TODO: TEST err
-	return e
+	k.dwriter.Flush()
+	// TODO: TEST err
+	return nil
 }
