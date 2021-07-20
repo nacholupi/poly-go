@@ -60,6 +60,7 @@ func Test_CircleToPolygon_Parsing_Error(t *testing.T) {
 }
 
 func Test_CircleToPolygon_When_Reader_Returns_Error(t *testing.T) {
+	
 	r := new(errReader)
 	conv := NewCsvToKmlConverter(r, os.Stdout)
 
