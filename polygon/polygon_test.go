@@ -10,7 +10,6 @@ import (
 const gradeToKM = 111.3195 // 1 grade == 111.3195km
 
 func Test_FromRadius_Validations(t *testing.T) {
-
 	type test struct {
 		name           string
 		coord          Coordinates
@@ -81,7 +80,6 @@ func Test_FromRadius_Validations(t *testing.T) {
 }
 
 func Test_FromRadius_Results(t *testing.T) {
-
 	type test struct {
 		name            string
 		coord           Coordinates

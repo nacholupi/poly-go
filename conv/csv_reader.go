@@ -14,7 +14,7 @@ type csvReqReader struct {
 }
 
 // CSV Format row: id, long, lat, radius, edges
-func NewCSVReqReader(r io.Reader) *csvReqReader {
+func newCSVReqReader(r io.Reader) *csvReqReader {
 	csvr := csv.NewReader(r)
 	csvr.FieldsPerRecord = 5
 	csvr.TrimLeadingSpace = true

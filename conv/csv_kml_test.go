@@ -3,7 +3,6 @@ package conv
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
@@ -11,7 +10,6 @@ import (
 )
 
 func Test_CircleToPolygon_Parsing_Error(t *testing.T) {
-
 	type tCase struct {
 		name string
 		csv  string
@@ -50,7 +48,7 @@ func Test_CircleToPolygon_Parsing_Error(t *testing.T) {
 	for _, tc := range tCases {
 		t.Run(tc.name, func(t *testing.T) {
 			r := strings.NewReader(tc.csv)
-			conv := NewCsvToKmlConverter(r, os.Stdout)
+			conv := NewCsvToKmlConverter(r, &emptyWriter{})
 
 			err := conv.CircleToPolygon()
 
@@ -60,9 +58,8 @@ func Test_CircleToPolygon_Parsing_Error(t *testing.T) {
 }
 
 func Test_CircleToPolygon_When_Reader_Returns_Error(t *testing.T) {
-	
 	r := new(errReader)
-	conv := NewCsvToKmlConverter(r, os.Stdout)
+	conv := NewCsvToKmlConverter(r, &emptyWriter{})
 
 	err := conv.CircleToPolygon()
 
@@ -70,7 +67,6 @@ func Test_CircleToPolygon_When_Reader_Returns_Error(t *testing.T) {
 }
 
 func Test_CircleToPolygon_KML_Responses(t *testing.T) {
-
 	type tCase struct {
 		name     string
 		csv      string
@@ -83,82 +79,96 @@ func Test_CircleToPolygon_KML_Responses(t *testing.T) {
 			csv:      "",
 			expected: "",
 			err:      false,
-		},
-		{
+		}, {
 			name: "CSV with single row - 3 edges",
 			csv:  "ID1,1,-89,2,3",
-			expected: "  <Placemark>\n" +
-				"    <name>ID1</name>\n" +
-				"    <Polygon>\n" +
-				"      <outerBoundaryIs>\n" +
-				"        <LinearRing>\n" +
-				"          <coordinates> 1.00000000,-88.98203369 1.89953277,-89.00886103 0.10046723,-89.00886103" +
+			expected: `<?xml version="1.0" encoding="UTF-8"?>` + "\n" +
+				`<kml xmlns="http://www.opengis.net/kml/2.2">` + "\n" +
+				"  <Document>\n" +
+				"    <Placemark>\n" +
+				"      <name>ID1</name>\n" +
+				"      <Polygon>\n" +
+				"        <outerBoundaryIs>\n" +
+				"          <LinearRing>\n" +
+				"            <coordinates> 1.00000000,-88.98203369 1.89953277,-89.00886103 0.10046723,-89.00886103" +
 				" 1.00000000,-88.98203369</coordinates>\n" +
-				"        </LinearRing>\n" +
-				"      </outerBoundaryIs>\n" +
-				"    </Polygon>\n" +
-				"  </Placemark>",
+				"          </LinearRing>\n" +
+				"        </outerBoundaryIs>\n" +
+				"      </Polygon>\n" +
+				"    </Placemark>\n" +
+				"  </Document>\n" +
+				"</kml>",
 			err: false,
-		},
-		{
+		}, {
 			name: "CSV with single row - trimmed long, lat",
 			csv:  "ID1,       1,  -89,2,3",
-			expected: "  <Placemark>\n" +
-				"    <name>ID1</name>\n" +
-				"    <Polygon>\n" +
-				"      <outerBoundaryIs>\n" +
-				"        <LinearRing>\n" +
-				"          <coordinates> 1.00000000,-88.98203369 1.89953277,-89.00886103 0.10046723,-89.00886103" +
+			expected: `<?xml version="1.0" encoding="UTF-8"?>` + "\n" +
+				`<kml xmlns="http://www.opengis.net/kml/2.2">` + "\n" +
+				"  <Document>\n" +
+				"    <Placemark>\n" +
+				"      <name>ID1</name>\n" +
+				"      <Polygon>\n" +
+				"        <outerBoundaryIs>\n" +
+				"          <LinearRing>\n" +
+				"            <coordinates> 1.00000000,-88.98203369 1.89953277,-89.00886103 0.10046723,-89.00886103" +
 				" 1.00000000,-88.98203369</coordinates>\n" +
-				"        </LinearRing>\n" +
-				"      </outerBoundaryIs>\n" +
-				"    </Polygon>\n" +
-				"  </Placemark>",
+				"          </LinearRing>\n" +
+				"        </outerBoundaryIs>\n" +
+				"      </Polygon>\n" +
+				"    </Placemark>\n" +
+				"  </Document>\n" +
+				"</kml>",
 			err: false,
-		},
-		{
+		}, {
 			name: "CSV with two rows - 3 and 10 edges",
 			csv: "ID1,1,-89,2,3\n" +
 				"ID2,0,0,1,4",
-			expected: "  <Placemark>\n" +
-				"    <name>ID1</name>\n" +
-				"    <Polygon>\n" +
-				"      <outerBoundaryIs>\n" +
-				"        <LinearRing>\n" +
-				"          <coordinates> 1.00000000,-88.98203369 1.89953277,-89.00886103 0.10046723,-89.00886103" +
+			expected: `<?xml version="1.0" encoding="UTF-8"?>` + "\n" +
+				`<kml xmlns="http://www.opengis.net/kml/2.2">` + "\n" +
+				"  <Document>\n" +
+				"    <Placemark>\n" +
+				"      <name>ID1</name>\n" +
+				"      <Polygon>\n" +
+				"        <outerBoundaryIs>\n" +
+				"          <LinearRing>\n" +
+				"            <coordinates> 1.00000000,-88.98203369 1.89953277,-89.00886103 0.10046723,-89.00886103" +
 				" 1.00000000,-88.98203369</coordinates>\n" +
-				"        </LinearRing>\n" +
-				"      </outerBoundaryIs>\n" +
-				"    </Polygon>\n" +
-				"  </Placemark>\n" +
-				"  <Placemark>\n" +
-				"    <name>ID2</name>\n" +
-				"    <Polygon>\n" +
-				"      <outerBoundaryIs>\n" +
-				"        <LinearRing>\n" +
-				"          <coordinates> 0.00000000,0.00898315 0.00898315,0.00000000 0.00000000,-0.00898315 " +
+				"          </LinearRing>\n" +
+				"        </outerBoundaryIs>\n" +
+				"      </Polygon>\n" +
+				"    </Placemark>\n" +
+				"    <Placemark>\n" +
+				"      <name>ID2</name>\n" +
+				"      <Polygon>\n" +
+				"        <outerBoundaryIs>\n" +
+				"          <LinearRing>\n" +
+				"            <coordinates> 0.00000000,0.00898315 0.00898315,0.00000000 0.00000000,-0.00898315 " +
 				"-0.00898315,-0.00000000 0.00000000,0.00898315</coordinates>\n" +
-				"        </LinearRing>\n" +
-				"      </outerBoundaryIs>\n" +
-				"    </Polygon>\n" +
-				"  </Placemark>",
+				"          </LinearRing>\n" +
+				"        </outerBoundaryIs>\n" +
+				"      </Polygon>\n" +
+				"    </Placemark>\n" +
+				"  </Document>\n" +
+				"</kml>",
 			err: false,
-		},
-		{
+		}, {
 			name: "CSV with two rows - the second fails",
 			csv: "ID1,1,-89,2,3\n" +
 				"ID2,0,1000,1,4",
-			expected: "  <Placemark>\n" +
-				"    <name>ID1</name>\n" +
-				"    <Polygon>\n" +
-				"      <outerBoundaryIs>\n" +
-				"        <LinearRing>\n" +
-				"          <coordinates> 1.00000000,-88.98203369 1.89953277,-89.00886103 0.10046723,-89.00886103" +
+			expected: `<?xml version="1.0" encoding="UTF-8"?>` + "\n" +
+				`<kml xmlns="http://www.opengis.net/kml/2.2">` + "\n" +
+				"  <Document>\n" +
+				"    <Placemark>\n" +
+				"      <name>ID1</name>\n" +
+				"      <Polygon>\n" +
+				"        <outerBoundaryIs>\n" +
+				"          <LinearRing>\n" +
+				"            <coordinates> 1.00000000,-88.98203369 1.89953277,-89.00886103 0.10046723,-89.00886103" +
 				" 1.00000000,-88.98203369</coordinates>\n" +
-				"        </LinearRing>\n" +
-				"      </outerBoundaryIs>\n" +
-				"    </Polygon>\n" +
-				"  </Placemark>",
+				"          </LinearRing>\n" +
+				"        </outerBoundaryIs>\n" +
+				"      </Polygon>\n" +
+				"    </Placemark>",
 			err: true,
 		},
 	}
@@ -180,3 +190,7 @@ func Test_CircleToPolygon_KML_Responses(t *testing.T) {
 type errReader struct{}
 
 func (*errReader) Read(b []byte) (n int, err error) { return 0, fmt.Errorf("error") }
+
+type emptyWriter struct{}
+
+func (*emptyWriter) Write(p []byte) (n int, err error) { return 0, nil }

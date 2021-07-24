@@ -13,7 +13,6 @@ type Coordinates struct {
 const earthRadiusKM = float64(6378.137)
 
 func FromRadius(coord Coordinates, radiusKm float64, edges int) ([]Coordinates, error) {
-
 	err := validateInput(coord, radiusKm, edges)
 	if err != nil {
 		return nil, err
@@ -47,12 +46,10 @@ func validateInput(coord Coordinates, radiusKm float64, edges int) error {
 // Convert circle(radius) to polygon.
 // Algorithm source: https://www.movable-type.co.uk/scripts/latlong.html
 func polygonFromRadius(coord Coordinates, radiusKm float64, edges int) []Coordinates {
-
 	dR := radiusKm / earthRadiusKM
 	res := make([]Coordinates, 0, edges)
 
 	for i := 0; i < edges; i++ {
-
 		brng := float64(2*i) * math.Pi / float64(edges)
 		lat1 := coord.Lat * math.Pi / 180
 		lon1 := coord.Long * math.Pi / 180

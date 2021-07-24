@@ -8,25 +8,29 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+//TODO: remove
 func Test_FromRadiusIO_ReaderFails(t *testing.T) {
 	req := []request{nullIslandReq("ID_1", 5), nullIslandReq("ID_2", 4)}
 	one := 1
 	r := &ioTestReader{input: req, failIdx: &one}
 	w := &ioTestWriter{}
+	p := pipe{in: r, out: w}
 
-	err := FromRadiusIO(r, w)
+	err := p.CircleToPolygon()
 
 	assert.Error(t, err)
 	assert.Len(t, w.output, 1)
 }
 
+//TODO: remove
 func Test_FromRadiusIO_WriterFails(t *testing.T) {
 	req := []request{nullIslandReq("ID_1", 5), nullIslandReq("ID_2", 10)}
 	one := 1
 	r := &ioTestReader{input: req}
 	w := &ioTestWriter{failIdx: &one}
+	p := pipe{in: r, out: w}
 
-	err := FromRadiusIO(r, w)
+	err := p.CircleToPolygon()
 
 	assert.Error(t, err)
 	assert.Len(t, w.output, 1)
@@ -73,3 +77,7 @@ func (w *ioTestWriter) write(p response) error {
 	w.idx++
 	return nil
 }
+
+func (w *ioTestWriter) writeHeader() error { return nil }
+
+func (w *ioTestWriter) writeFooter() error { return nil }
